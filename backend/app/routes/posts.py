@@ -20,7 +20,21 @@ def get_posts(
     response = (
         supabase
         .table("posts")
-        .select("*")
+        .select(
+            """
+            *,
+            users (
+                id,
+                username,
+                display_name
+            ),
+            contexts (
+                id,
+                context_type,
+                context_name
+            )
+            """
+        )
         .order("created_at", desc=True)
         .range(offset, offset + limit - 1)
         .execute()

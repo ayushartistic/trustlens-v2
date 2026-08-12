@@ -30,3 +30,9 @@ textarea,
 select {
   font: inherit;
 }
+
+.secondary-text {
+    margin-top: 3px;
+    font-size: 12px;
+    color: #7a8494;
+}

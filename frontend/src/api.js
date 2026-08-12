@@ -35,3 +35,15 @@ export async function getUsers(limit = 50, offset = 0) {
 
   return response.json();
 }
+
+export async function getPosts(limit = 50, offset = 0) {
+    const response = await fetch(
+        `${API_BASE_URL}/api/posts/?limit=${limit}&offset=${offset}`
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch posts");
+    }
+
+    return response.json();
+}
