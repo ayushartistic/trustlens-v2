@@ -23,3 +23,15 @@ export async function checkBackendHealth() {
 
   return response.json();
 }
+
+export async function getUsers(limit = 50, offset = 0) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/users?limit=${limit}&offset=${offset}`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch users");
+  }
+
+  return response.json();
+}
