@@ -475,3 +475,123 @@ def execute_follower_attack(
         attack_event_ids=event_ids,
         follow_ids=follow_ids
     )
+
+# ============================================================
+# Attack History
+# ============================================================
+
+@router.get("/")
+def get_attacks(
+    limit: int = 50,
+    attack_type: Optional[str] = None,
+    status: Optional[str] = None
+):
+    """
+    Return recent attacks.
+
+    Optional filters:
+        attack_type
+        status
+    """
+
+    supabase = get_supabase()
+
+    # --------------------------------------------------------
+    # Validate limit
+    # --------------------------------------------------------
+
+    if limit < 1 or limit > 200:
+        raise HTTPException(
+            status_code=400,
+            detail="limit must be between 1 and 200."
+        )
+
+    # --------------------------------------------------------
+    # Build query
+    # --------------------------------------------------------
+
+    query = (
+        supabase
+        .table("attacks")
+        .select("*")
+        .order("created_at", desc=True)
+        .limit(limit)
+    )
+
+    if attack_type:
+        query = query.eq(
+            "attack_type",
+            attack_type
+        )
+
+    if status:
+        query = query.eq(
+            "status",
+            status
+        )
+
+    # --------------------------------------------------------
+    # Execute
+    # --------------------------------------------------------
+
+    response = query.execute()
+
+    return {
+        "success": True,
+        "count": len(response.data),
+        "attacks": response.data
+    }
+
+# ============================================================
+# Single Attack Details
+# ============================================================
+
+@router.get("/{attack_id}")
+def get_attack(
+    attack_id: str
+):
+    """
+    Return one attack and all of its attack events.
+    """
+
+    supabase = get_supabase()
+
+    # --------------------------------------------------------
+    # Get attack
+    # --------------------------------------------------------
+
+    attack_response = (
+        supabase
+        .table("attacks")
+        .select("*")
+        .eq("id", attack_id)
+        .limit(1)
+        .execute()
+    )
+
+    if not attack_response.data:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Attack not found: {attack_id}"
+        )
+
+    attack = attack_response.data[0]
+
+    # --------------------------------------------------------
+    # Get associated events
+    # --------------------------------------------------------
+
+    events_response = (
+        supabase
+        .table("attack_events")
+        .select("*")
+        .eq("attack_id", attack_id)
+        .order("created_at", desc=False)
+        .execute()
+    )
+
+    return {
+        "success": True,
+        "attack": attack,
+        "events": events_response.data
+    }
