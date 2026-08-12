@@ -72,6 +72,7 @@
 from fastapi import FastAPI
 
 from .database import get_supabase
+from .routes.attacks import router as attacks_router
 
 from .routes import (
     users,
@@ -94,7 +95,7 @@ app.include_router(posts.router)
 app.include_router(comments.router)
 app.include_router(contexts.router)
 app.include_router(dashboard.router)
-
+app.include_router(attacks_router)
 
 @app.get("/")
 def root():
