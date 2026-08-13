@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
+    const navigate = useNavigate();
     const [form, setForm] = useState({
         email: "",
         password: "",
@@ -37,7 +38,8 @@ function Login() {
                 throw loginError;
             }
 
-            window.location.href = "/";
+            // window.location.href = "/";
+            navigate("/", { replace: true });
         } catch (err) {
             setError(err.message);
         } finally {
