@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
 from ..database import get_supabase
+from ..auth import get_current_user
 
 
 router = APIRouter(
@@ -8,6 +9,10 @@ router = APIRouter(
     tags=["Users"]
 )
 
+
+# --------------------------------------------------
+# Get all users
+# --------------------------------------------------
 
 @router.get("/")
 def get_users():
@@ -27,6 +32,38 @@ def get_users():
         "users": response.data
     }
 
+
+# --------------------------------------------------
+# Get current authenticated user's profile
+# --------------------------------------------------
+
+@router.get("/me")
+def get_current_user_profile(
+    current_user=Depends(get_current_user)
+):
+
+    supabase = get_supabase()
+
+    response = (
+        supabase
+        .table("users")
+        .select("*")
+        .eq("auth_user_id", current_user.id)
+        .execute()
+    )
+
+    if not response.data:
+        raise HTTPException(
+            status_code=404,
+            detail="Social user profile not found."
+        )
+
+    return response.data[0]
+
+
+# --------------------------------------------------
+# Get user by social user ID
+# --------------------------------------------------
 
 @router.get("/{user_id}")
 def get_user(user_id: str):
@@ -49,6 +86,10 @@ def get_user(user_id: str):
 
     return response.data[0]
 
+
+# --------------------------------------------------
+# Get followers
+# --------------------------------------------------
 
 @router.get("/{user_id}/followers")
 def get_followers(user_id: str):
@@ -89,6 +130,10 @@ def get_followers(user_id: str):
         "followers": users_response.data
     }
 
+
+# --------------------------------------------------
+# Get following
+# --------------------------------------------------
 
 @router.get("/{user_id}/following")
 def get_following(user_id: str):
