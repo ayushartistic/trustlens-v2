@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from pydantic import BaseModel
 
+from ..auth import get_current_user
 from ..database import get_supabase
 
 
@@ -7,7 +9,40 @@ router = APIRouter(
     prefix="/api/posts",
     tags=["Posts"]
 )
+class CreatePostRequest(BaseModel):
+    text: str
 
+@router.post("/")
+def create_post(
+    post: CreatePostRequest,
+    current_user=Depends(get_current_user)
+):
+
+    supabase = get_supabase()
+
+    if not post.text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Post text cannot be empty."
+        )
+
+    response = (
+        supabase
+        .table("posts")
+        .insert({
+            "user_id": current_user.id,
+            "text": post.text.strip()
+        })
+        .execute()
+    )
+
+    if not response.data:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create post."
+        )
+
+    return response.data[0]
 
 @router.get("/")
 def get_posts(
@@ -46,6 +81,7 @@ def get_posts(
         "offset": offset,
         "posts": response.data
     }
+
 
 
 @router.get("/{post_id}")
