@@ -499,17 +499,40 @@ setComments((prev) => ({
 
                                 <div className="post-author">
 
-                                    <strong>
-                                        @{post.users?.username ||
-                                            "unknown"}
-                                    </strong>
+    {post.users?.id ? (
 
-                                    <span>
-                                        {post.users?.display_name ||
-                                            "Unknown User"}
-                                    </span>
+        <button
+            className="post-author-button"
+            onClick={() =>
+                navigate(`/profile/${post.users.id}`)
+            }
+        >
+            <strong>
+                @{post.users?.username || "unknown"}
+            </strong>
 
-                                </div>
+            <span>
+                {post.users?.display_name ||
+                    "Unknown User"}
+            </span>
+        </button>
+
+    ) : (
+
+        <>
+            <strong>
+                @{post.users?.username || "unknown"}
+            </strong>
+
+            <span>
+                {post.users?.display_name ||
+                    "Unknown User"}
+            </span>
+        </>
+
+    )}
+
+</div>
 
 
                                 {/* ---------------------- */}

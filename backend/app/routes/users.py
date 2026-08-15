@@ -32,7 +32,60 @@ def get_users():
         "users": response.data
     }
 
+# --------------------------------------------------
+# Check whether current user follows another user
+# --------------------------------------------------
 
+@router.get("/{user_id}/following-status")
+def get_following_status(
+    user_id: str,
+    current_user=Depends(get_current_user)
+):
+
+    supabase = get_supabase()
+
+    # Find the social profile belonging to
+    # the currently authenticated Supabase user.
+    current_profile_response = (
+        supabase
+        .table("users")
+        .select("id")
+        .eq("auth_user_id", current_user.id)
+        .execute()
+    )
+
+    if not current_profile_response.data:
+        raise HTTPException(
+            status_code=404,
+            detail="Current user profile not found."
+        )
+
+    current_social_user_id = (
+        current_profile_response.data[0]["id"]
+    )
+
+    # A user cannot follow themselves.
+    if current_social_user_id == user_id:
+        return {
+            "user_id": user_id,
+            "is_following": False,
+            "is_self": True
+        }
+
+    response = (
+        supabase
+        .table("follows")
+        .select("id")
+        .eq("follower_id", current_social_user_id)
+        .eq("followee_id", user_id)
+        .execute()
+    )
+
+    return {
+        "user_id": user_id,
+        "is_following": len(response.data) > 0,
+        "is_self": False
+    }
 # --------------------------------------------------
 # Get current authenticated user's profile
 # --------------------------------------------------

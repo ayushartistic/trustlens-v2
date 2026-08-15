@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { useAuth } from "../context/AuthContext";
+
 import {
     getUser,
     getFollowers,
-    getFollowing
+    getFollowing,
+    getFollowingStatus,
+    followUser,
+    unfollowUser
 } from "../api";
 
 
@@ -13,14 +18,41 @@ function Profile() {
     const { userId } = useParams();
     const navigate = useNavigate();
 
+    const { session } = useAuth();
+
+
+    // --------------------------------------------------
+    // Profile
+    // --------------------------------------------------
+
     const [profile, setProfile] = useState(null);
 
     const [followersCount, setFollowersCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
 
+
+    // --------------------------------------------------
+    // Follow state
+    // --------------------------------------------------
+
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [isSelf, setIsSelf] = useState(false);
+
+    const [followLoading, setFollowLoading] = useState(false);
+    const [followError, setFollowError] = useState(null);
+
+
+    // --------------------------------------------------
+    // Page state
+    // --------------------------------------------------
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+
+    // --------------------------------------------------
+    // Load profile
+    // --------------------------------------------------
 
     async function loadProfile() {
 
@@ -28,9 +60,11 @@ function Profile() {
 
             setLoading(true);
             setError(null);
+            setFollowError(null);
+
 
             // ------------------------------------------
-            // Load the actual profile
+            // Load profile
             // ------------------------------------------
 
             const profileData = await getUser(userId);
@@ -39,7 +73,7 @@ function Profile() {
 
 
             // ------------------------------------------
-            // Load followers/following independently
+            // Load followers
             // ------------------------------------------
 
             try {
@@ -62,6 +96,10 @@ function Profile() {
             }
 
 
+            // ------------------------------------------
+            // Load following
+            // ------------------------------------------
+
             try {
 
                 const followingData =
@@ -81,6 +119,42 @@ function Profile() {
                 setFollowingCount(0);
             }
 
+
+            // ------------------------------------------
+            // Load following status
+            // ------------------------------------------
+
+            if (session?.access_token) {
+
+                try {
+
+                    const followingStatus =
+                        await getFollowingStatus(
+                            userId,
+                            session.access_token
+                        );
+
+                    setIsFollowing(
+                        followingStatus.is_following
+                    );
+
+                    setIsSelf(
+                        followingStatus.is_self
+                    );
+
+                } catch (err) {
+
+                    console.error(
+                        "Failed to load following status:",
+                        err
+                    );
+
+                    setIsFollowing(false);
+                    setIsSelf(false);
+                }
+
+            }
+
         } catch (err) {
 
             console.error(
@@ -98,16 +172,96 @@ function Profile() {
     }
 
 
+    // --------------------------------------------------
+    // Follow / Unfollow
+    // --------------------------------------------------
+
+    async function handleFollowToggle() {
+
+        if (!session?.access_token) {
+
+            setFollowError(
+                "You are not authenticated."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            setFollowLoading(true);
+            setFollowError(null);
+
+
+            if (isFollowing) {
+
+                // --------------------------------------
+                // Unfollow
+                // --------------------------------------
+
+                await unfollowUser(
+                    userId,
+                    session.access_token
+                );
+
+                setIsFollowing(false);
+
+                setFollowersCount(
+                    (prev) => Math.max(0, prev - 1)
+                );
+
+            } else {
+
+                // --------------------------------------
+                // Follow
+                // --------------------------------------
+
+                await followUser(
+                    userId,
+                    session.access_token
+                );
+
+                setIsFollowing(true);
+
+                setFollowersCount(
+                    (prev) => prev + 1
+                );
+            }
+
+        } catch (err) {
+
+            console.error(
+                "Follow action failed:",
+                err
+            );
+
+            setFollowError(
+                err.message
+            );
+
+        } finally {
+
+            setFollowLoading(false);
+
+        }
+    }
+
+
+    // --------------------------------------------------
+    // Load profile when page opens
+    // --------------------------------------------------
+
     useEffect(() => {
 
         loadProfile();
 
-    }, [userId]);
+    }, [userId, session?.access_token]);
 
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // Loading state
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     if (loading) {
 
@@ -123,9 +277,9 @@ function Profile() {
     }
 
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // Profile loading error
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     if (error) {
 
@@ -147,9 +301,9 @@ function Profile() {
     }
 
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // No profile
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     if (!profile) {
 
@@ -171,9 +325,9 @@ function Profile() {
     }
 
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // Profile UI
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     return (
         <div className="profile-page">
@@ -247,6 +401,48 @@ function Profile() {
                         </p>
 
                     </div>
+
+
+                    {/* -------------------------------- */}
+                    {/* Follow Button */}
+                    {/* -------------------------------- */}
+
+                    {!isSelf && (
+
+                        <div className="profile-follow-section">
+
+                            <button
+                                className={
+                                    isFollowing
+                                        ? "unfollow-button"
+                                        : "follow-button"
+                                }
+                                onClick={handleFollowToggle}
+                                disabled={followLoading}
+                            >
+
+                                {followLoading
+                                    ? "Loading..."
+                                    : isFollowing
+                                        ? "Following"
+                                        : "Follow"}
+
+                            </button>
+
+
+                            {followError && (
+
+                                <div className="profile-follow-error">
+
+                                    {followError}
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                    )}
 
 
                     {/* -------------------------------- */}

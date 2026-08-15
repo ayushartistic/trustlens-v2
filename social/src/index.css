@@ -109,3 +109,11 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+.post-author-button {
+    background: none;
+    border: none;
+    
+    cursor: pointer;
+    
+    
+}
