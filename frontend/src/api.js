@@ -1,5 +1,6 @@
 const API_BASE_URL = "http://127.0.0.1:8000";
 
+
 export async function getDashboardSummary() {
   const response = await fetch(
     `${API_BASE_URL}/api/dashboard/summary`
@@ -11,6 +12,7 @@ export async function getDashboardSummary() {
 
   return response.json();
 }
+
 
 export async function checkBackendHealth() {
   const response = await fetch(
@@ -24,6 +26,7 @@ export async function checkBackendHealth() {
   return response.json();
 }
 
+
 export async function getUsers(limit = 50, offset = 0) {
   const response = await fetch(
     `${API_BASE_URL}/api/users?limit=${limit}&offset=${offset}`
@@ -36,14 +39,28 @@ export async function getUsers(limit = 50, offset = 0) {
   return response.json();
 }
 
+
 export async function getPosts(limit = 50, offset = 0) {
-    const response = await fetch(
-        `${API_BASE_URL}/api/posts/?limit=${limit}&offset=${offset}`
-    );
+  const response = await fetch(
+    `${API_BASE_URL}/api/posts/?limit=${limit}&offset=${offset}`
+  );
 
-    if (!response.ok) {
-        throw new Error("Failed to fetch posts");
-    }
+  if (!response.ok) {
+    throw new Error("Failed to fetch posts");
+  }
 
-    return response.json();
+  return response.json();
+}
+
+
+export async function getComments(limit = 50, offset = 0) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/comments/?limit=${limit}&offset=${offset}`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch comments");
+  }
+
+  return response.json();
 }
