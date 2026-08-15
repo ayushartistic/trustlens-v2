@@ -7,7 +7,8 @@ import {
     getPosts,
     createPost,
     getPostComments,
-    createComment
+    createComment,
+    getCurrentUserProfile
 } from "../api";
 
 
@@ -288,7 +289,29 @@ setComments((prev) => ({
 
     }, []);
 
+    async function handleMyProfile() {
 
+    if (!session?.access_token) {
+        return;
+    }
+
+    try {
+
+        const profile = await getCurrentUserProfile(
+            session.access_token
+        );
+
+        navigate(`/profile/${profile.id}`);
+
+    } catch (err) {
+
+        console.error(
+            "Failed to load own profile:",
+            err
+        );
+
+    }
+}
     // --------------------------------------------------
     // Logout
     // --------------------------------------------------
@@ -326,28 +349,36 @@ setComments((prev) => ({
             {/* Header */}
             {/* ------------------------------------------ */}
 
-            <header className="home-header">
+<header className="home-header">
 
-                <div>
+    <div>
 
-                    <h1>
-                        TrustLens Social
-                    </h1>
+        <h1>
+            TrustLens Social
+        </h1>
 
-                    <p>
-                        Welcome,{" "}
-                        {user?.user_metadata?.display_name ||
-                            user?.email}
-                    </p>
+        <p>
+            Welcome,{" "}
+            {user?.user_metadata?.display_name ||
+                user?.email}
+        </p>
 
-                </div>
+    </div>
 
 
-                <button onClick={handleLogout}>
-                    Logout
-                </button>
+    <div className="home-header-actions">
 
-            </header>
+        <button onClick={handleMyProfile}>
+            Profile
+        </button>
+
+        <button onClick={handleLogout}>
+            Logout
+        </button>
+
+    </div>
+
+</header>
 
 
             <main className="feed-container">
