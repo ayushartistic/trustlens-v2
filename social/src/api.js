@@ -81,6 +81,59 @@ export async function createComment(postId, text, accessToken) {
 }
 
 
+export async function getUser(userId) {
+    const response = await fetch(
+        `${API_BASE_URL}/api/users/${userId}`
+    );
+
+    if (!response.ok) {
+
+        const errorData = await response.json();
+
+        throw new Error(
+            errorData.detail || "Failed to fetch user"
+        );
+    }
+
+    return response.json();
+}
+
+
+export async function getFollowers(userId) {
+    const response = await fetch(
+        `${API_BASE_URL}/api/users/${userId}/followers`
+    );
+
+    if (!response.ok) {
+
+        const errorData = await response.json();
+
+        throw new Error(
+            errorData.detail || "Failed to fetch followers"
+        );
+    }
+
+    return response.json();
+}
+
+
+export async function getFollowing(userId) {
+    const response = await fetch(
+        `${API_BASE_URL}/api/users/${userId}/following`
+    );
+
+    if (!response.ok) {
+
+        const errorData = await response.json();
+
+        throw new Error(
+            errorData.detail || "Failed to fetch following"
+        );
+    }
+
+    return response.json();
+}
+
 export async function checkBackendHealth() {
     const response = await fetch(
         `${API_BASE_URL}/health`

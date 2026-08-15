@@ -63,6 +63,31 @@ def get_current_user_profile(
 
 
 # --------------------------------------------------
+# Get user by social user ID
+# --------------------------------------------------
+
+@router.get("/{user_id}")
+def get_user(user_id: str):
+
+    supabase = get_supabase()
+
+    response = (
+        supabase
+        .table("users")
+        .select("*")
+        .eq("id", user_id)
+        .execute()
+    )
+
+    if not response.data:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found."
+        )
+
+    return response.data[0]
+
+# --------------------------------------------------
 # Follow a user
 # --------------------------------------------------
 
