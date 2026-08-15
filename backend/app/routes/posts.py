@@ -112,12 +112,21 @@ def get_post_comments(post_id: str):
     supabase = get_supabase()
 
     response = (
-        supabase
-        .table("comments")
-        .select("*")
-        .eq("post_id", post_id)
-        .order("created_at", desc=False)
-        .execute()
+    supabase
+    .table("comments")
+    .select(
+        """
+        *,
+        users (
+            id,
+            username,
+            display_name
+        )
+        """
+    )
+    .eq("post_id", post_id)
+    .order("created_at", desc=False)
+    .execute()
     )
 
     return {

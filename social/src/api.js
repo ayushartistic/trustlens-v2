@@ -12,6 +12,7 @@ export async function getPosts(limit = 20, offset = 0) {
     return response.json();
 }
 
+
 export async function createPost(text, accessToken) {
     const response = await fetch(
         `${API_BASE_URL}/api/posts/`,
@@ -38,6 +39,46 @@ export async function createPost(text, accessToken) {
     return response.json();
 }
 
+
+export async function getPostComments(postId) {
+    const response = await fetch(
+        `${API_BASE_URL}/api/posts/${postId}/comments`
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch comments");
+    }
+
+    return response.json();
+}
+
+
+export async function createComment(postId, text, accessToken) {
+    const response = await fetch(
+        `${API_BASE_URL}/api/comments/`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                post_id: postId,
+                text: text,
+            }),
+        }
+    );
+
+    if (!response.ok) {
+        const errorData = await response.json();
+
+        throw new Error(
+            errorData.detail || "Failed to create comment"
+        );
+    }
+
+    return response.json();
+}
 
 
 export async function checkBackendHealth() {
