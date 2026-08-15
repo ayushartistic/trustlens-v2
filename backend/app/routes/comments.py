@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from pydantic import BaseModel
 
+from ..auth import get_current_user
 from ..database import get_supabase
 
 
@@ -7,6 +9,71 @@ router = APIRouter(
     prefix="/api/comments",
     tags=["Comments"]
 )
+
+
+class CreateCommentRequest(BaseModel):
+    post_id: str
+    text: str
+
+
+@router.post("/")
+def create_comment(
+    comment: CreateCommentRequest,
+    current_user=Depends(get_current_user)
+):
+
+    supabase = get_supabase()
+
+    # ---------------------------------------------
+    # Validate comment text
+    # ---------------------------------------------
+
+    if not comment.text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Comment text cannot be empty."
+        )
+
+    # ---------------------------------------------
+    # Verify that the post exists
+    # ---------------------------------------------
+
+    post_response = (
+        supabase
+        .table("posts")
+        .select("id")
+        .eq("id", comment.post_id)
+        .execute()
+    )
+
+    if not post_response.data:
+        raise HTTPException(
+            status_code=404,
+            detail="Post not found."
+        )
+
+    # ---------------------------------------------
+    # Create comment
+    # ---------------------------------------------
+
+    response = (
+        supabase
+        .table("comments")
+        .insert({
+            "post_id": comment.post_id,
+            "user_id": current_user.id,
+            "text": comment.text.strip()
+        })
+        .execute()
+    )
+
+    if not response.data:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create comment."
+        )
+
+    return response.data[0]
 
 
 @router.get("/")

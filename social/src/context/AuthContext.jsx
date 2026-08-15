@@ -17,6 +17,7 @@ export function AuthProvider({ children }) {
             } = await supabase.auth.getSession();
 
             if (mounted) {
+                console.log("ACCESS TOKEN:", session?.access_token);
                 setSession(session);
                 setUser(session?.user ?? null);
                 setLoading(false);
