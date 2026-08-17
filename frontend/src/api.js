@@ -64,3 +64,15 @@ export async function getComments(limit = 50, offset = 0) {
 
   return response.json();
 }
+
+export async function getBotDetections() {
+  const response = await fetch(
+    `${API_BASE_URL}/api/detections/bots`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch bot detection results");
+  }
+
+  return response.json();
+}
